@@ -1,9 +1,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use bip39::{Language, Mnemonic, MnemonicType};
 use ethers::{
     prelude::*,
-    signers::{LocalWallet, Wallet},
+    signers::{coins_bip39::English, LocalWallet},
 };
 use hex::encode;
 use rand::Rng;
@@ -12,15 +11,18 @@ use tauri::{Manager, PhysicalSize};
 use tauri_plugin_positioner::{Position, WindowExt};
 
 #[tauri::command]
-fn greet(name: &str) -> String {
-    Wallet::new_seed();
-    String::new()
+fn generate_wallet(key_type: &str, length: Option<usize>) -> Wallet {
+    match key_type {
+        "private_key" => Wallet::new_pk(),
+        "mnemonic" => Wallet::new_seed(length.unwrap()),
+        _ => unreachable!(),
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Wallet {
-    address: Address,
-    key: String,
+    pub address: Address,
+    pub key: String,
 }
 
 impl Wallet {
@@ -37,9 +39,18 @@ impl Wallet {
         }
     }
 
-    fn new_seed() {
-        let mnemonic = Mnemonic::new(MnemonicType::Words12, Language::English);
-        println!("{:#?}", mnemonic);
+    fn new_seed(length: usize) -> Self {
+        let mut rng = rand::thread_rng();
+        let mnemonic = coins_bip39::Mnemonic::<English>::new_with_count(&mut rng, length).unwrap();
+        let wallet = MnemonicBuilder::<English>::default()
+            .phrase::<PathOrString>(mnemonic.to_phrase().as_str().into())
+            .build()
+            .unwrap();
+
+        Wallet {
+            address: wallet.address(),
+            key: mnemonic.to_phrase(),
+        }
     }
 }
 
@@ -59,7 +70,7 @@ fn main() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![greet])
+        .invoke_handler(tauri::generate_handler![generate_wallet])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

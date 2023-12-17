@@ -1,10 +1,17 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/tauri";
-  //TODO: use invoke to test mnemonic
   import ExportMethod from "./lib/ExportMethod.svelte";
 
   let divHeight = 55;
   let isExpanded = false;
+
+  const newWallet = async (keyType: String) => {
+    const wallet = await invoke("generate_wallet", {
+      keyType: keyType,
+      length: 12,
+    });
+    console.log(wallet);
+  };
 
   const toggleDivHeight = () => {
     isExpanded = !isExpanded;
@@ -18,7 +25,6 @@
       on:click={toggleDivHeight}
       class:clicked={isExpanded}
       class="new-wallet"
-      role="button"
     >
       {!isExpanded ? "Create new wallets" : "Hide menu"}
     </button>
@@ -26,8 +32,18 @@
     <div id="line"></div>
     <ExportMethod text="Import with private key" />
     <ExportMethod text="Import with seed phrase" />
-    <ExportMethod text="Generate private key" />
-    <ExportMethod text="Generate seed phrase" />
+    <ExportMethod
+      on:click={() => {
+        newWallet("private_key");
+      }}
+      text="Generate private key"
+    />
+    <ExportMethod
+      on:click={() => {
+        newWallet("mnemonic");
+      }}
+      text="Generate seed phrase"
+    />
   </div>
 </main>
 
@@ -92,3 +108,4 @@
     }
   }
 </style>
+
