@@ -1,24 +1,30 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/tauri";
-  import ExportMethod from "./lib/ExportMethod.svelte";
-  import PasswordWindow from "./lib/PasswordWindow.svelte";
+  import ExportMethod from "./WalletTray/ExportMethod.svelte";
 
   let divHeight = 55;
   let isExpanded = false;
   let createPassword = false;
+  let keyType: string;
+  let password = "";
 
-  const newWallet = async (keyType: String) => {
+  const createNewWallet = async (type: string) => {
+    keyType = type;
     createPassword = true;
-    const wallet = await invoke("generate_wallet", {
-      keyType: keyType,
-      length: 12,
-    });
-    console.log(wallet);
   };
 
   const toggleDivHeight = () => {
     isExpanded = !isExpanded;
-    divHeight = isExpanded ? 500 : 55;
+    divHeight = isExpanded ? 430 : 55;
+  };
+
+  const closePasswordWindow = async () => {
+    createPassword = false;
+    await invoke("generate_wallet", {
+      keyType,
+      length: 12,
+      password,
+    });
   };
 </script>
 
@@ -39,26 +45,73 @@
     <h3>Create:</h3>
     <ExportMethod
       on:click={() => {
-        newWallet("private_key");
+        createNewWallet("private_key");
       }}
       text="Private key"
     />
     <ExportMethod
       on:click={() => {
-        newWallet("mnemonic");
+        createNewWallet("mnemonic");
       }}
       text="Seed phrase"
     />
   </div>
 
   {#if createPassword}
-    <PasswordWindow />
+    <div id="overlay">
+      <input
+        id="password-input"
+        type="text"
+        on:input={(e) => (password = e.target.value)}
+      />
+      <button
+        id="password-button"
+        on:click={async () => {
+          await closePasswordWindow();
+        }}
+      ></button>
+    </div>
   {/if}
 </main>
 
 <style>
+  #overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    border-radius: 10px;
+    background-color: rgba(30, 30, 30, 0.5);
+  }
+
+  #password-input {
+    background-color: grey;
+    border-top-right-radius: 5px;
+    border-top-left-radius: 5px;
+    margin-left: calc(50% - 150px);
+    margin-top: 120px;
+    width: 300px;
+    height: 100px;
+    border-bottom: 3px solid black;
+    border: 0;
+  }
+
+  #password-button {
+    cursor: pointer;
+    width: 302px;
+    height: 40px;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    margin-left: calc(50% - 150px);
+    border: 0;
+  }
+
   h3 {
+    color: white;
     margin-left: 10px;
+    margin-bottom: 0;
   }
 
   #line {
@@ -89,7 +142,6 @@
     white-space: pre;
     width: 382px;
     word-break: normal;
-    word-spacing: normal;
     z-index: 2;
   }
 

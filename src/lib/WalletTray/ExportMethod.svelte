@@ -4,10 +4,10 @@
   const dispatch = createEventDispatcher();
 </script>
 
-<button class="butt" on:click={() => dispatch("click")}>{text}</button>
+<button class="method-button" on:click={() => dispatch("click")}>{text}</button>
 
 <style>
-  .butt {
+  .method-button {
     cursor: pointer;
     margin-left: 10px;
     margin-top: 10px;
@@ -21,4 +21,3 @@
     font-size: 20px;
   }
 </style>
-

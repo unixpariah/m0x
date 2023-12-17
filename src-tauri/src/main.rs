@@ -5,15 +5,17 @@ use ethers::{
     signers::{coins_bip39::English, LocalWallet},
 };
 use hex::encode;
+use openssl::symm::{decrypt, encrypt, Cipher};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+use sha2::Digest;
 use tauri::{Manager, PhysicalSize};
 use tauri_plugin_positioner::{Position, WindowExt};
 
 #[tauri::command]
-fn generate_wallet(key_type: &str, length: Option<usize>) -> Wallet {
+fn generate_wallet(key_type: &str, password: &str, length: Option<usize>) -> Wallet {
     match key_type {
-        "private_key" => Wallet::new_pk(),
+        "private_key" => Wallet::new_pk(password),
         "mnemonic" => Wallet::new_seed(length.unwrap()),
         _ => unreachable!(),
     }
@@ -26,12 +28,22 @@ struct Wallet {
 }
 
 impl Wallet {
-    fn new_pk() -> Self {
+    fn new_pk(password: &str) -> Self {
         let mut rng = rand::thread_rng();
-
         let private_key: [u8; 32] = rng.gen();
         let private_key = encode(private_key);
         let wallet: LocalWallet = private_key.parse().unwrap();
+
+        let password = {
+            let mut sha256 = sha2::Sha256::new();
+            sha256.update(password.as_bytes());
+            &hex::encode(sha256.finalize())[..16]
+        };
+
+        let cipher = Cipher::aes_128_ecb();
+        let encrypted_wallets = encrypt(cipher, password.as_bytes(), None, private_key.as_bytes())
+            .expect("Failed to encrypt wallets");
+        //TODO: make it output into file
 
         Wallet {
             address: wallet.address(),
