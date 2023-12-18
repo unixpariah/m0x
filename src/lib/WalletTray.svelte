@@ -1,6 +1,7 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/tauri";
-  import CreateWallets from "./CreateWallets.svelte";
+  import CreateWallets from "./WalletTray/CreateWallets.svelte";
+  import Wallets from "./WalletTray/Wallets.svelte";
 
   interface Wallet {
     address: string;
@@ -19,11 +20,6 @@
     divHeight = isExpanded ? 430 : 55;
   };
 
-  const createNewWallet = async (type: string) => {
-    keyType = type;
-    createPassword = true;
-  };
-
   const closePasswordWindow = async () => {
     createPassword = false;
     await invoke("generate_wallet", {
@@ -38,28 +34,28 @@
     return await invoke("read_wallets");
   };
 
+  const createNewWallet = async (type: string) => {
+    keyType = type;
+    createPassword = true;
+  };
+
   let wallets: Promise<Wallet[]> = getWallets();
+
+  function passwordCreator(event: Event) {
+    const target = event.target as HTMLInputElement;
+    password = target.value;
+  }
 </script>
 
-<main class="container">
+<main class="container" lang="ts">
   <CreateWallets {createNewWallet} {divHeight} {isExpanded} {toggleDivHeight} />
-
-  {#await wallets then wallets}
-    {#each wallets as wallet}
-      <div class="wallet-wrapper">
-        <p class="wallet">{wallet.address}</p>
-      </div>
-    {/each}
-  {:catch error}
-    <p style="color: red">{error.message}</p>
-  {/await}
 
   {#if createPassword}
     <div id="overlay">
       <input
         id="password-input"
         type="text"
-        on:input={(e) => (password = e?.target?.value)}
+        on:input={(e) => passwordCreator(e)}
       />
       {#if keyType === "mnemonic"}
         <div id="choose-lenght">
@@ -85,6 +81,8 @@
       ></button>
     </div>
   {/if}
+
+  <Wallets {wallets} />
 </main>
 
 <style>
@@ -103,17 +101,6 @@
     height: 40px;
     background-color: white;
     margin-left: calc(50% - 150px);
-  }
-
-  .wallet {
-    color: white;
-    font-size: 0.9rem;
-  }
-
-  .wallet-wrapper {
-    background-color: grey;
-    width: 380px;
-    height: 30px;
   }
 
   #overlay {
@@ -149,4 +136,3 @@
     border: 0;
   }
 </style>
-

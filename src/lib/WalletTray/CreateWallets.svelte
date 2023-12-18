@@ -1,5 +1,5 @@
 <script lang="ts">
-  import ExportMethod from "./WalletTray/ExportMethod.svelte";
+  import ExportMethod from "./CreateWallets/ExportMethod.svelte";
 
   export let divHeight: number;
   export let isExpanded: boolean;
@@ -101,4 +101,3 @@
     }
   }
 </style>
-
