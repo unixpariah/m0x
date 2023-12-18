@@ -9,7 +9,7 @@ use openssl::symm::{decrypt, encrypt, Cipher};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use sha2::Digest;
-use std::fs;
+use std::{fs, thread};
 use tauri::api::path::app_data_dir;
 use tauri::{Config, Manager, PhysicalSize};
 use tauri_plugin_positioner::{Position, WindowExt};
@@ -29,12 +29,18 @@ fn read_wallets() -> Vec<Wallet> {
     let mut app_data_dir_path = app_data_dir(&config).unwrap();
     app_data_dir_path.push("m0x/signers");
     let wallets = fs::read_dir(&app_data_dir_path).unwrap();
-    wallets
-        .into_iter()
-        .map(|signer| {
+    let mut handles = Vec::new();
+    wallets.into_iter().for_each(|signer| {
+        let handle = thread::spawn(|| {
             let wallet = fs::read_to_string(signer.unwrap().path().join("signer.json")).unwrap();
             serde_json::from_str(&wallet).unwrap()
-        })
+        });
+        handles.push(handle)
+    });
+
+    handles
+        .into_iter()
+        .map(|handle| handle.join().unwrap())
         .collect()
 }
 

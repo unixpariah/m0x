@@ -1,74 +1,54 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/tauri";
-  import ExportMethod from "./WalletTray/ExportMethod.svelte";
+  import CreateWallets from "./CreateWallets.svelte";
+
+  interface Wallet {
+    address: string;
+    key: string;
+  }
 
   let divHeight = 55;
   let isExpanded = false;
   let createPassword = false;
   let keyType: string;
   let password = "";
-
-  const createNewWallet = async (type: string) => {
-    keyType = type;
-    createPassword = true;
-  };
+  let length = 12;
 
   const toggleDivHeight = () => {
     isExpanded = !isExpanded;
     divHeight = isExpanded ? 430 : 55;
   };
 
+  const createNewWallet = async (type: string) => {
+    keyType = type;
+    createPassword = true;
+  };
+
   const closePasswordWindow = async () => {
     createPassword = false;
     await invoke("generate_wallet", {
       keyType,
-      length: 12,
+      length,
       password,
     });
-    wallets = await getWallets();
+    wallets = getWallets();
   };
 
-  const getWallets = async () => {
+  const getWallets = async (): Promise<Wallet[]> => {
     return await invoke("read_wallets");
   };
 
-  let wallets = getWallets();
+  let wallets: Promise<Wallet[]> = getWallets();
 </script>
 
 <main class="container">
-  <div style={`height: ${divHeight}px;`} class="expanding-div">
-    <button
-      on:click={toggleDivHeight}
-      class:clicked={isExpanded}
-      class="new-wallet"
-    >
-      {!isExpanded ? "Create new wallets" : "Hide menu"}
-    </button>
+  <CreateWallets {createNewWallet} {divHeight} {isExpanded} {toggleDivHeight} />
 
-    <div id="line"></div>
-    <h3>Import:</h3>
-    <ExportMethod text="Private key" />
-    <ExportMethod text="Seed phrase" />
-    <h3>Create:</h3>
-    <ExportMethod
-      on:click={() => {
-        createNewWallet("private_key");
-      }}
-      text="Private key"
-    />
-    <ExportMethod
-      on:click={() => {
-        createNewWallet("mnemonic");
-      }}
-      text="Seed phrase"
-    />
-  </div>
-
-  {#await wallets}
-    <p>...waiting</p>
-  {:then wallets}
+  {#await wallets then wallets}
     {#each wallets as wallet}
-      <p class="wallets">{wallet.address}</p>
+      <div class="wallet-wrapper">
+        <p class="wallet">{wallet.address}</p>
+      </div>
     {/each}
   {:catch error}
     <p style="color: red">{error.message}</p>
@@ -81,6 +61,22 @@
         type="text"
         on:input={(e) => (password = e?.target?.value)}
       />
+      {#if keyType === "mnemonic"}
+        <div id="choose-lenght">
+          <button
+            on:click={() => {
+              length = 12;
+            }}
+            id="length-button">12</button
+          >
+          <button
+            on:click={() => {
+              length = 24;
+            }}
+            id="length-button">24</button
+          >
+        </div>
+      {/if}
       <button
         id="password-button"
         on:click={async () => {
@@ -92,9 +88,32 @@
 </main>
 
 <style>
-  .wallets {
+  #length-button {
+    border-radius: 0;
+    border: 1px solid black;
+    border-left: 0;
+    width: 151px;
+    height: 40px;
+    padding: 0;
+    float: left;
+  }
+
+  #choose-lenght {
+    width: 302px;
+    height: 40px;
+    background-color: white;
+    margin-left: calc(50% - 150px);
+  }
+
+  .wallet {
     color: white;
     font-size: 0.9rem;
+  }
+
+  .wallet-wrapper {
+    background-color: grey;
+    width: 380px;
+    height: 30px;
   }
 
   #overlay {
@@ -128,71 +147,6 @@
     border-bottom-right-radius: 5px;
     margin-left: calc(50% - 150px);
     border: 0;
-  }
-
-  h3 {
-    color: white;
-    margin-left: 10px;
-    margin-bottom: 0;
-  }
-
-  #line {
-    margin-top: 0.5px;
-    height: 3px;
-    background-color: black;
-  }
-
-  .new-wallet {
-    align-items: center;
-    background: #1d1d1f;
-    border: 0;
-    border-radius: 8px;
-    box-sizing: border-box;
-    color: white;
-    cursor: pointer;
-    display: flex;
-    font-size: 1rem;
-    justify-content: center;
-    line-height: 1.5rem;
-    padding: 15px;
-    position: relative;
-    text-align: left;
-    transition: 0.2s;
-    user-select: none;
-    -webkit-user-select: none;
-    touch-action: manipulation;
-    white-space: pre;
-    width: 382px;
-    word-break: normal;
-    z-index: 2;
-  }
-
-  .new-wallet:hover {
-    background: #18181c;
-  }
-
-  .new-wallet.clicked {
-    border-bottom-right-radius: 0;
-    border-bottom-left-radius: 0;
-  }
-
-  .expanding-div {
-    background-color: #1d1d1f;
-    transition: height 0.5s;
-    overflow: hidden;
-    width: 382px;
-    position: relative;
-    z-index: 1;
-    box-shadow:
-      -10px -10px 30px 0 #171719,
-      10px 10px 30px 0 #2a1f62;
-    border-radius: 10px;
-  }
-
-  @media (min-width: 768px) {
-    .new-wallet {
-      padding: 24px;
-    }
   }
 </style>
 
