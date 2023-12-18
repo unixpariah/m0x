@@ -25,7 +25,14 @@
       length: 12,
       password,
     });
+    wallets = await getWallets();
   };
+
+  const getWallets = async () => {
+    return await invoke("read_wallets");
+  };
+
+  let wallets = getWallets();
 </script>
 
 <main class="container">
@@ -57,12 +64,22 @@
     />
   </div>
 
+  {#await wallets}
+    <p>...waiting</p>
+  {:then wallets}
+    {#each wallets as wallet}
+      <p class="wallets">{wallet.address}</p>
+    {/each}
+  {:catch error}
+    <p style="color: red">{error.message}</p>
+  {/await}
+
   {#if createPassword}
     <div id="overlay">
       <input
         id="password-input"
         type="text"
-        on:input={(e) => (password = e.target.value)}
+        on:input={(e) => (password = e?.target?.value)}
       />
       <button
         id="password-button"
@@ -75,6 +92,11 @@
 </main>
 
 <style>
+  .wallets {
+    color: white;
+    font-size: 0.9rem;
+  }
+
   #overlay {
     position: absolute;
     top: 0;
