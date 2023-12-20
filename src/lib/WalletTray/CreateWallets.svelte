@@ -7,12 +7,8 @@
   export let createNewWallet: (type: string) => Promise<void>;
 </script>
 
-<div style={`height: ${divHeight}px;`} class="expanding-div">
-  <button
-    on:click={toggleDivHeight}
-    class:clicked={isExpanded}
-    class="new-wallet"
-  >
+<div style={`height: ${divHeight}px;`} id="expanding-div">
+  <button on:click={toggleDivHeight} class:clicked={isExpanded}>
     {!isExpanded ? "Create new wallets" : "Hide menu"}
   </button>
 
@@ -36,7 +32,7 @@
 </div>
 
 <style>
-  .expanding-div {
+  #expanding-div {
     background-color: #1d1d1f;
     transition: height 0.5s;
     overflow: hidden;
@@ -61,7 +57,7 @@
     background-color: black;
   }
 
-  .new-wallet {
+  button {
     align-items: center;
     background: #1d1d1f;
     border: 0;
@@ -86,17 +82,17 @@
     z-index: 2;
   }
 
-  .new-wallet:hover {
+  button:hover {
     background: #18181c;
   }
 
-  .new-wallet.clicked {
+  button.clicked {
     border-bottom-right-radius: 0;
     border-bottom-left-radius: 0;
   }
 
   @media (min-width: 768px) {
-    .new-wallet {
+    button {
       padding: 24px;
     }
   }

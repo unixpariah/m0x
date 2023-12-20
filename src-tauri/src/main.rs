@@ -5,7 +5,7 @@ use ethers::{
     signers::{coins_bip39::English, LocalWallet},
 };
 use hex::encode;
-use openssl::symm::{decrypt, encrypt, Cipher};
+use openssl::symm::{encrypt, Cipher};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use sha2::Digest;

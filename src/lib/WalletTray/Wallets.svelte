@@ -4,7 +4,7 @@
     key: string;
   }
 
-  export let wallets: Promise<Wallet[]>;
+  export let wallets: Wallet[];
 </script>
 
 <div>
