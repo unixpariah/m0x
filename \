@@ -11,9 +11,7 @@
 <div>
   {#each wallets as wallet}
     <div class="wallet-wrapper">
-      <p class="name">
-        {wallet.name}
-      </p>
+      <p class="name">{wallet.name} <button></button></p>
       <p class="wallet">{wallet.address}</p>
     </div>
   {/each}
@@ -32,5 +30,10 @@
     width: 380px;
     height: 35px;
   }
-</style>
 
+  button {
+    margin: 0;
+    border-radius: 0;
+    border: 0;
+  }
+</style>

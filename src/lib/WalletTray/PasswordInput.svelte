@@ -1,11 +1,13 @@
 <script lang="ts">
   export let passwordCreator: (event: Event) => void;
+  export let setName: (event: Event) => void;
   export let closePasswordWindow: () => void;
   export let keyType: string;
 </script>
 
 <div id="overlay">
-  <input type="text" on:input={(e) => passwordCreator(e)} />
+  <input type="text" on:input={(e) => setName(e)} />
+  <input type="password" on:input={(e) => passwordCreator(e)} />
   {#if keyType === "mnemonic"}
     <div id="choose-lenght">
       <button
@@ -81,3 +83,4 @@
     border: 0;
   }
 </style>
+

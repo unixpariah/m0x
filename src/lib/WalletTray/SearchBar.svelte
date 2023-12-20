@@ -15,5 +15,7 @@
     width: 376px;
     height: 20px;
     margin-top: 10px;
+    margin-left: 0;
   }
 </style>
+

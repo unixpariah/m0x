@@ -6,6 +6,7 @@
   import SearchBar from "./WalletTray/SearchBar.svelte";
 
   interface Wallet {
+    name: string;
     address: string;
     key: string;
   }
@@ -15,6 +16,7 @@
   let createPassword = false;
   let keyType: string;
   let password = "";
+  let name = "";
   let length = 12;
   let wallets: Wallet[] = [];
   let query = "";
@@ -30,15 +32,18 @@
       keyType,
       length,
       password,
+      name,
     });
     getWallets();
+    name = "";
+    password = "";
   };
 
   const getWallets = async () => {
     const loadedWallets: Wallet[] = await invoke("read_wallets");
     wallets = [];
     loadedWallets.forEach((wallet: Wallet) => {
-      if (wallet.address.includes(query)) {
+      if (wallet.name.includes(query)) {
         wallets.push(wallet);
       }
     });
@@ -47,6 +52,11 @@
   const createNewWallet = async (type: string) => {
     keyType = type;
     createPassword = true;
+  };
+
+  const setName = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    name = target.value;
   };
 
   const passwordCreator = (event: Event) => {
@@ -68,7 +78,12 @@
   <SearchBar {query} {search} />
   <Wallets {wallets} />
   {#if createPassword}
-    <PasswordInput {passwordCreator} {closePasswordWindow} {keyType} />
+    <PasswordInput
+      {setName}
+      {passwordCreator}
+      {closePasswordWindow}
+      {keyType}
+    />
   {/if}
 </main>
 

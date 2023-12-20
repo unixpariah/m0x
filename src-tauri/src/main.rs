@@ -15,12 +15,24 @@ use tauri::{Config, Manager, PhysicalSize};
 use tauri_plugin_positioner::{Position, WindowExt};
 
 #[tauri::command]
-fn generate_wallet(key_type: &str, password: &str, length: Option<usize>) -> Wallet {
+fn generate_wallet(key_type: &str, password: &str, length: Option<usize>, name: &str) -> Wallet {
     match key_type {
-        "private_key" => Wallet::new_pk(password),
-        "mnemonic" => Wallet::new_seed(password, length.unwrap()),
+        "private_key" => Wallet::new_pk(password, name),
+        "mnemonic" => Wallet::new_seed(password, name, length.unwrap()),
         _ => unreachable!(),
     }
+}
+
+#[tauri::command]
+fn change_name(address: &str, name: String) {
+    let config = Config::default();
+    let mut app_data_dir_path = app_data_dir(&config).unwrap();
+    app_data_dir_path.push(format!("m0x/signers/{}/signer.json", &address[4..22]));
+    let wallet = fs::read_to_string(&app_data_dir_path).unwrap();
+    let mut wallet = serde_json::from_str::<Wallet>(&wallet).unwrap();
+    wallet.name = name;
+    let wallet = serde_json::to_string(&wallet).unwrap();
+    fs::write(&app_data_dir_path, wallet).expect("Failed to create account");
 }
 
 #[tauri::command]
@@ -46,29 +58,37 @@ fn read_wallets() -> Vec<Wallet> {
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Wallet {
+    pub name: String,
     pub address: Address,
     pub key: String,
 }
 
 impl Wallet {
-    fn new_pk(password: &str) -> Self {
+    fn new_pk(password: &str, name: &str) -> Self {
         let mut rng = rand::thread_rng();
         let private_key: [u8; 32] = rng.gen();
         let private_key = encode(private_key);
         let wallet: LocalWallet = private_key.parse().unwrap();
 
+        let name = if name.trim() == "" {
+            format!("Wallet {}", read_wallets().len() + 1)
+        } else {
+            name.to_string()
+        };
+
         let wallet = Wallet {
+            name: name.clone(),
             address: wallet.address(),
             key: private_key,
         };
 
-        let encrypted_wallet = Self::encrypt(&wallet, password);
+        let encrypted_wallet = Self::encrypt(&wallet, password, &name);
         Self::output_wallet(encrypted_wallet);
 
         wallet
     }
 
-    fn new_seed(password: &str, length: usize) -> Self {
+    fn new_seed(password: &str, name: &str, length: usize) -> Self {
         let mut rng = rand::thread_rng();
         let mnemonic = coins_bip39::Mnemonic::<English>::new_with_count(&mut rng, length).unwrap();
         let wallet = MnemonicBuilder::<English>::default()
@@ -76,18 +96,24 @@ impl Wallet {
             .build()
             .unwrap();
 
+        let name = if name.trim() == "" {
+            format!("Wallet {}", read_wallets().len() + 1)
+        } else {
+            name.to_string()
+        };
         let wallet = Wallet {
+            name: name.clone(),
             address: wallet.address(),
             key: mnemonic.to_phrase(),
         };
 
-        let encrypted_wallet = Self::encrypt(&wallet, password);
+        let encrypted_wallet = Self::encrypt(&wallet, password, &name);
         Self::output_wallet(encrypted_wallet);
 
         wallet
     }
 
-    fn encrypt(wallet: &Wallet, password: &str) -> Wallet {
+    fn encrypt(wallet: &Wallet, password: &str, name: &str) -> Wallet {
         let password = {
             let mut sha256 = sha2::Sha256::new();
             sha256.update(password.as_bytes());
@@ -98,7 +124,13 @@ impl Wallet {
         let encrypted_key = encrypt(cipher, password.as_bytes(), None, wallet.key.as_bytes())
             .expect("Failed to encrypt wallets");
 
+        let name = if name.trim() == "" {
+            format!("Wallet {}", read_wallets().len() + 1)
+        } else {
+            name.to_string()
+        };
         let wallet = Wallet {
+            name,
             address: wallet.address,
             key: encode(encrypted_key),
         };
@@ -133,7 +165,11 @@ fn main() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![generate_wallet, read_wallets])
+        .invoke_handler(tauri::generate_handler![
+            generate_wallet,
+            read_wallets,
+            change_name
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
