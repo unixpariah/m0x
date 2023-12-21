@@ -5,6 +5,7 @@
   export let isExpanded: boolean;
   export let toggleDivHeight: () => void;
   export let createNewWallet: (type: string) => Promise<void>;
+  export let importNewWallet: (type: string) => Promise<void>;
 </script>
 
 <div style={`height: ${divHeight}px;`} id="expanding-div">
@@ -14,19 +15,21 @@
 
   <div id="line"></div>
   <h3>Import:</h3>
-  <ExportMethod text="Private key" />
-  <ExportMethod text="Seed phrase" />
-  <h3>Create:</h3>
   <ExportMethod
-    on:click={() => {
-      createNewWallet("private_key");
-    }}
+    on:click={() => importNewWallet("private_key")}
     text="Private key"
   />
   <ExportMethod
-    on:click={() => {
-      createNewWallet("mnemonic");
-    }}
+    on:click={() => importNewWallet("importMnemonic")}
+    text="Seed phrase"
+  />
+  <h3>Create:</h3>
+  <ExportMethod
+    on:click={() => createNewWallet("private_key")}
+    text="Private key"
+  />
+  <ExportMethod
+    on:click={() => createNewWallet("mnemonic")}
     text="Seed phrase"
   />
 </div>

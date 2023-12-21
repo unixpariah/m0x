@@ -15,12 +15,21 @@ use tauri::{Config, Manager, PhysicalSize};
 use tauri_plugin_positioner::{Position, WindowExt};
 
 #[tauri::command]
-fn generate_wallet(key_type: &str, password: &str, length: Option<usize>, name: &str) -> Wallet {
+fn generate_wallet(key_type: &str, password: &str, length: Option<usize>, name: &str) {
     match key_type {
         "private_key" => Wallet::new_pk(password, name),
         "mnemonic" => Wallet::new_seed(password, name, length.unwrap()),
         _ => unreachable!(),
-    }
+    };
+}
+
+#[tauri::command]
+fn import_wallet(key_type: &str, password: &str, key: &str, name: &str) {
+    match key_type {
+        "private_key" => Wallet::import_pk(key, password, name),
+        "importMnemonic" => Wallet::import_seed(key, password, name),
+        _ => unreachable!(),
+    };
 }
 
 #[tauri::command]
@@ -64,7 +73,7 @@ struct Wallet {
 }
 
 impl Wallet {
-    fn new_pk(password: &str, name: &str) -> Self {
+    fn new_pk(password: &str, name: &str) {
         let mut rng = rand::thread_rng();
         let private_key: [u8; 32] = rng.gen();
         let private_key = encode(private_key);
@@ -84,11 +93,9 @@ impl Wallet {
 
         let encrypted_wallet = Self::encrypt(&wallet, password, &name);
         Self::output_wallet(encrypted_wallet);
-
-        wallet
     }
 
-    fn new_seed(password: &str, name: &str, length: usize) -> Self {
+    fn new_seed(password: &str, name: &str, length: usize) {
         let mut rng = rand::thread_rng();
         let mnemonic = coins_bip39::Mnemonic::<English>::new_with_count(&mut rng, length).unwrap();
         let wallet = MnemonicBuilder::<English>::default()
@@ -109,8 +116,52 @@ impl Wallet {
 
         let encrypted_wallet = Self::encrypt(&wallet, password, &name);
         Self::output_wallet(encrypted_wallet);
+    }
 
-        wallet
+    fn import_pk(private_key: &str, password: &str, name: &str) {
+        let wallet: LocalWallet = match private_key.parse() {
+            Ok(wallet) => wallet,
+            Err(_) => return,
+        };
+
+        let name = if name.trim() == "" {
+            format!("Wallet {}", read_wallets().len() + 1)
+        } else {
+            name.to_string()
+        };
+
+        let wallet = Wallet {
+            name: name.clone(),
+            address: wallet.address(),
+            key: private_key.to_string(),
+        };
+
+        let encrypted_wallet = Self::encrypt(&wallet, password, &name);
+        Self::output_wallet(encrypted_wallet);
+    }
+
+    fn import_seed(mnemonic: &str, password: &str, name: &str) {
+        let wallet = match MnemonicBuilder::<English>::default()
+            .phrase::<PathOrString>(mnemonic.into())
+            .build()
+        {
+            Ok(wallet) => wallet,
+            Err(_) => return,
+        };
+
+        let name = if name.trim() == "" {
+            format!("Wallet {}", read_wallets().len() + 1)
+        } else {
+            name.to_string()
+        };
+        let wallet = Wallet {
+            name: name.clone(),
+            address: wallet.address(),
+            key: mnemonic.to_string(),
+        };
+
+        let encrypted_wallet = Self::encrypt(&wallet, password, &name);
+        Self::output_wallet(encrypted_wallet);
     }
 
     fn encrypt(wallet: &Wallet, password: &str, name: &str) -> Wallet {
@@ -168,8 +219,10 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             generate_wallet,
             read_wallets,
-            change_name
+            change_name,
+            import_wallet,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+

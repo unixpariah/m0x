@@ -13,6 +13,8 @@
 
   let divHeight = 55;
   let isExpanded = false;
+  let createWallet = false;
+  let importWallet = false;
   let createPassword = false;
   let keyType: string;
   let password = "";
@@ -20,14 +22,28 @@
   let length = 12;
   let wallets: Wallet[] = [];
   let query = "";
+  let key = "";
 
   const toggleDivHeight = () => {
     isExpanded = !isExpanded;
     divHeight = isExpanded ? 430 : 55;
   };
 
-  const closePasswordWindow = async () => {
-    createPassword = false;
+  const closePasswordWindow = async (isImport?: boolean) => {
+    if (isImport) {
+      importWallet = false;
+      createPassword = false;
+      await invoke("import_wallet", {
+        keyType,
+        password,
+        key,
+        name,
+      });
+      getWallets();
+      return;
+    }
+
+    createWallet = false;
     await invoke("generate_wallet", {
       keyType,
       length,
@@ -51,7 +67,12 @@
 
   const createNewWallet = async (type: string) => {
     keyType = type;
-    createPassword = true;
+    createWallet = true;
+  };
+
+  const importNewWallet = async (type: string) => {
+    keyType = type;
+    importWallet = true;
   };
 
   const setName = (event: Event) => {
@@ -64,6 +85,11 @@
     password = target.value;
   };
 
+  const setKey = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    key = target.value;
+  };
+
   const search = (event: Event) => {
     const target = event.target as HTMLInputElement;
     query = target.value;
@@ -74,10 +100,16 @@
 </script>
 
 <main class="container">
-  <CreateWallets {createNewWallet} {divHeight} {isExpanded} {toggleDivHeight} />
+  <CreateWallets
+    {createNewWallet}
+    {divHeight}
+    {isExpanded}
+    {toggleDivHeight}
+    {importNewWallet}
+  />
   <SearchBar {query} {search} />
   <Wallets {wallets} />
-  {#if createPassword}
+  {#if createWallet}
     <PasswordInput
       {setName}
       {passwordCreator}
@@ -85,5 +117,16 @@
       {keyType}
     />
   {/if}
+  {#if importWallet}
+    <input type="text" on:input={(e) => setKey(e)} />
+    <button on:click={() => (createPassword = true)}></button>
+    {#if createPassword}
+      <PasswordInput
+        {setName}
+        {passwordCreator}
+        closePasswordWindow={async () => await closePasswordWindow(true)}
+        {keyType}
+      />
+    {/if}
+  {/if}
 </main>
-

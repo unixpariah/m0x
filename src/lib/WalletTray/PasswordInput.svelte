@@ -10,26 +10,11 @@
   <input type="password" on:input={(e) => passwordCreator(e)} />
   {#if keyType === "mnemonic"}
     <div id="choose-lenght">
-      <button
-        on:click={() => {
-          length = 12;
-        }}
-        id="length-button">12</button
-      >
-      <button
-        on:click={() => {
-          length = 24;
-        }}
-        id="length-button">24</button
-      >
+      <button on:click={() => (length = 12)} id="length-button">12</button>
+      <button on:click={() => (length = 24)} id="length-button">24</button>
     </div>
   {/if}
-  <button
-    id="password-button"
-    on:click={() => {
-      closePasswordWindow();
-    }}
-  ></button>
+  <button id="password-button" on:click={() => closePasswordWindow()}></button>
 </div>
 
 <style>
@@ -83,4 +68,3 @@
     border: 0;
   }
 </style>
-
