@@ -1,16 +1,16 @@
 <script lang="ts">
   import ExportMethod from "./CreateWallets/ExportMethod.svelte";
 
-  export let divHeight: number;
-  export let isExpanded: boolean;
-  export let toggleDivHeight: () => void;
+  export let trayHeight: number;
+  export let isTrayExpanded: boolean;
+  export let toggleTrayHeight: () => void;
   export let createNewWallet: (type: string) => Promise<void>;
   export let importNewWallet: (type: string) => Promise<void>;
 </script>
 
-<div style={`height: ${divHeight}px;`} id="expanding-div">
-  <button on:click={toggleDivHeight} class:clicked={isExpanded}>
-    {!isExpanded ? "Create new wallets" : "Hide menu"}
+<div style={`height: ${trayHeight}px;`} id="expanding-div">
+  <button on:click={toggleTrayHeight} class:clicked={isTrayExpanded}>
+    {!isTrayExpanded ? "Create new wallets" : "Hide menu"}
   </button>
 
   <div id="line"></div>

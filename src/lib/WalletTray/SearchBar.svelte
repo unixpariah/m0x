@@ -1,12 +1,12 @@
 <script lang="ts">
-  export let query = "";
-  export let search: (e: Event) => void;
+  export let searchQuery = "";
+  export let setSearchQuery: (e: Event) => void;
 </script>
 
 <input
   type="text"
-  bind:value={query}
-  on:input={search}
+  bind:value={searchQuery}
+  on:input={setSearchQuery}
   placeholder="Search..."
 />
 

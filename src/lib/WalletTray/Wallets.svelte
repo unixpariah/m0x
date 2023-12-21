@@ -5,11 +5,11 @@
     key: string;
   }
 
-  export let wallets: Wallet[];
+  export let walletList: Wallet[];
 </script>
 
 <div>
-  {#each wallets as wallet}
+  {#each walletList as wallet}
     <div class="wallet-wrapper">
       <p class="name">
         {wallet.name}
@@ -33,4 +33,3 @@
     height: 35px;
   }
 </style>
-

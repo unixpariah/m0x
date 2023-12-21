@@ -1,9 +1,9 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/tauri";
-  import CreateWallets from "./WalletTray/CreateWallets.svelte";
-  import Wallets from "./WalletTray/Wallets.svelte";
-  import PasswordInput from "./WalletTray/PasswordInput.svelte";
-  import SearchBar from "./WalletTray/SearchBar.svelte";
+  import CreateWalletsComponent from "./WalletTray/CreateWallets.svelte";
+  import WalletsComponent from "./WalletTray/Wallets.svelte";
+  import PasswordInputComponent from "./WalletTray/PasswordInput.svelte";
+  import SearchBarComponent from "./WalletTray/SearchBar.svelte";
 
   interface Wallet {
     name: string;
@@ -11,121 +11,116 @@
     key: string;
   }
 
-  let divHeight = 55;
-  let isExpanded = false;
-  let createWallet = false;
-  let importWallet = false;
-  let createPassword = false;
-  let keyType: string;
-  let password = "";
-  let name = "";
-  let length = 12;
-  let wallets: Wallet[] = [];
-  let query = "";
-  let key = "";
+  let trayHeight = 55;
+  let isTrayExpanded = false;
+  let isCreatingWallet = false;
+  let isImportingWallet = false;
+  let isCreatingPassword = false;
+  let selectedKeyType: string;
+  let enteredPassword: string;
+  let enteredName: string;
+  let passwordLength = 12;
+  let walletList: Wallet[] = [];
+  let searchQuery = "";
+  let importedKey: string;
 
-  const toggleDivHeight = () => {
-    isExpanded = !isExpanded;
-    divHeight = isExpanded ? 430 : 55;
+  const toggleTrayHeight = () => {
+    isTrayExpanded = !isTrayExpanded;
+    trayHeight = isTrayExpanded ? 430 : 55;
   };
 
-  const closePasswordWindow = async (isImport?: boolean) => {
-    if (isImport) {
-      importWallet = false;
-      createPassword = false;
+  const closePasswordInput = async (isImporting?: boolean) => {
+    if (isImporting) {
+      isImportingWallet = false;
+      isCreatingPassword = false;
       await invoke("import_wallet", {
-        keyType,
-        password,
-        key,
-        name,
+        keyType: selectedKeyType,
+        password: enteredPassword,
+        key: importedKey,
+        name: enteredName,
       });
-      getWallets();
       return;
     }
-
-    createWallet = false;
+    isCreatingWallet = false;
     await invoke("generate_wallet", {
-      keyType,
-      length,
-      password,
-      name,
+      keyType: selectedKeyType,
+      length: passwordLength,
+      password: enteredPassword,
+      name: enteredName,
     });
-    getWallets();
-    name = "";
-    password = "";
+    enteredName = "";
+    enteredPassword = "";
+    refreshWalletList();
   };
 
-  const getWallets = async () => {
+  const refreshWalletList = async () => {
     const loadedWallets: Wallet[] = await invoke("read_wallets");
-    wallets = [];
-    loadedWallets.forEach((wallet: Wallet) => {
-      if (wallet.name.includes(query)) {
-        wallets.push(wallet);
-      }
-    });
+    walletList = loadedWallets.filter((wallet: Wallet) =>
+      wallet.name.includes(searchQuery),
+    );
   };
 
   const createNewWallet = async (type: string) => {
-    keyType = type;
-    createWallet = true;
+    selectedKeyType = type;
+    isCreatingWallet = true;
   };
 
   const importNewWallet = async (type: string) => {
-    keyType = type;
-    importWallet = true;
+    selectedKeyType = type;
+    isImportingWallet = true;
   };
 
   const setName = (event: Event) => {
     const target = event.target as HTMLInputElement;
-    name = target.value;
+    enteredName = target.value;
   };
 
-  const passwordCreator = (event: Event) => {
+  const setPassword = (event: Event) => {
     const target = event.target as HTMLInputElement;
-    password = target.value;
+    enteredPassword = target.value;
   };
 
-  const setKey = (event: Event) => {
+  const setImportedKey = (event: Event) => {
     const target = event.target as HTMLInputElement;
-    key = target.value;
+    importedKey = target.value;
   };
 
-  const search = (event: Event) => {
+  const setSearchQuery = (event: Event) => {
     const target = event.target as HTMLInputElement;
-    query = target.value;
-    getWallets();
+    searchQuery = target.value;
+    refreshWalletList();
   };
 
-  getWallets();
+  refreshWalletList();
 </script>
 
 <main class="container">
-  <CreateWallets
+  <CreateWalletsComponent
     {createNewWallet}
-    {divHeight}
-    {isExpanded}
-    {toggleDivHeight}
+    {trayHeight}
+    {isTrayExpanded}
+    {toggleTrayHeight}
     {importNewWallet}
   />
-  <SearchBar {query} {search} />
-  <Wallets {wallets} />
-  {#if createWallet}
-    <PasswordInput
+  <SearchBarComponent {searchQuery} {setSearchQuery} />
+  <WalletsComponent {walletList} />
+  {#if isCreatingWallet}
+    <PasswordInputComponent
       {setName}
-      {passwordCreator}
-      {closePasswordWindow}
-      {keyType}
+      {setPassword}
+      {closePasswordInput}
+      {selectedKeyType}
     />
   {/if}
-  {#if importWallet}
-    <input type="text" on:input={(e) => setKey(e)} />
-    <button on:click={() => (createPassword = true)}></button>
-    {#if createPassword}
-      <PasswordInput
+  {#if isImportingWallet}
+    <input type="text" on:input={(e) => setImportedKey(e)} />
+    <button on:click={() => (isCreatingPassword = true)}></button>
+    {#if isCreatingPassword}
+      <PasswordInputComponent
         {setName}
-        {passwordCreator}
-        closePasswordWindow={async () => await closePasswordWindow(true)}
-        {keyType}
+        {setPassword}
+        closePasswordInput={async () => await closePasswordInput(true)}
+        {selectedKeyType}
       />
     {/if}
   {/if}
