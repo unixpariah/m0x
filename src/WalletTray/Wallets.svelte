@@ -1,6 +1,5 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/tauri";
-  import { emit } from "@tauri-apps/api/event";
   interface Wallet {
     name: string;
     address: string;
@@ -11,20 +10,14 @@
   let password = "";
   let usedWallet: Wallet;
   let throwError = false;
-  let open_wallets: Wallet[];
 
   const openWallet = async () => {
     try {
-      open_wallets = await invoke("open_wallet", {
+      await invoke("open_wallet", {
         wallet: usedWallet,
         password,
       });
       inputPassword = false;
-      setTimeout(() => {
-        emit("click", {
-          theMessage: open_wallets,
-        });
-      }, 2000);
       throwError = false;
     } catch (e) {
       throwError = true;
@@ -61,7 +54,7 @@
   {/each}
 
   {#if inputPassword}
-    <input type="text" on:input={(e) => setPassword(e)} />
+    <input type="text" bind:value={password} on:input={(e) => setPassword(e)} />
     <button on:click={openWallet}></button>
   {/if}
 

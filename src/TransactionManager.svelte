@@ -1,11 +1,24 @@
-<script>
+<script lang="ts">
+  import { invoke } from "@tauri-apps/api/tauri";
   import { listen } from "@tauri-apps/api/event";
   import { onMount } from "svelte";
+
+  interface Wallet {
+    name: string;
+    address: string;
+    key: string;
+  }
+
+  let openWallets: Wallet[] = [];
+
   onMount(async () => {
-    await listen("click", (event) => {
-      console.log(`Received click event with payload: ${event.payload}`);
+    openWallets = await invoke("read_opened_wallets");
+    await listen("update_wallet_list", (event: { payload: Wallet[] }) => {
+      openWallets = event.payload;
     });
   });
 </script>
 
-<div>hi</div>
+{#each openWallets as item}
+  <p>{item.address}</p>
+{/each}

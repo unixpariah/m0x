@@ -20,14 +20,12 @@ lazy_static! {
 }
 
 #[tauri::command]
-fn open_wallet(
-    wallet: Wallet,
-    password: &str,
-    app: tauri::AppHandle,
-) -> tauri::Result<Vec<Wallet>> {
+fn open_wallet(wallet: Wallet, password: &str, app: tauri::AppHandle) -> tauri::Result<()> {
     let wallet = Wallet::decrypt(wallet, password)?;
     let mut open_wallets = OPEN_WALLETS.lock().unwrap();
-    open_wallets.push(wallet);
+    if !open_wallets.contains(&wallet) {
+        open_wallets.push(wallet);
+    }
 
     let _ = tauri::WindowBuilder::new(
         &app,
@@ -43,7 +41,16 @@ fn open_wallet(
             .expect("Failed to set window size");
     }
     let _ = transaction_manager.move_window(Position::TopLeft);
-    Ok((*open_wallets).clone())
+    transaction_manager
+        .emit("update_wallet_list", &*open_wallets)
+        .unwrap();
+    Ok(())
+}
+
+#[tauri::command]
+fn read_opened_wallets() -> Vec<Wallet> {
+    let open_wallets = OPEN_WALLETS.lock().unwrap();
+    (*open_wallets).clone()
 }
 
 #[tauri::command]
@@ -97,7 +104,7 @@ fn read_wallets() -> Vec<Wallet> {
         .collect()
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 struct Wallet {
     pub name: String,
     pub address: Address,
@@ -274,7 +281,8 @@ fn main() {
             read_wallets,
             change_name,
             import_wallet,
-            open_wallet
+            open_wallet,
+            read_opened_wallets
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
