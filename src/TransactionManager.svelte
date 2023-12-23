@@ -25,7 +25,25 @@
       }px`;
     });
   });
+
+  const handleKeydown = (e: { key: string }) => {
+    switch (e.key) {
+      case "H":
+        if (chosenWallet > 0) {
+          chosenWallet--;
+        }
+        break;
+      case "L":
+        if (chosenWallet < openWallets.length - 1) {
+          chosenWallet++;
+        }
+      default:
+        break;
+    }
+  };
 </script>
+
+<svelte:window on:keydown={handleKeydown} />
 
 <div>
   {#each openWallets as wallet}
