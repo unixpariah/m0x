@@ -4,45 +4,46 @@ use ethers::{
     prelude::*,
     signers::{coins_bip39::English, LocalWallet},
 };
-use hex::encode;
+use hex::{decode, encode};
 use lazy_static::lazy_static;
 use openssl::symm::{decrypt, encrypt, Cipher};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use sha2::Digest;
-use std::{fs, thread};
+use std::{fs, sync::Mutex, thread};
 use tauri::api::path::app_data_dir;
 use tauri::{Config, Manager, PhysicalSize};
 use tauri_plugin_positioner::{Position, WindowExt};
 
 lazy_static! {
-    static ref OPEN_WALLETS: Vec<Wallet> = Vec::new();
+    static ref OPEN_WALLETS: Mutex<Vec<Wallet>> = Mutex::new(Vec::new());
 }
 
 #[tauri::command]
-fn open_wallet(wallet: Wallet, password: &str, app: tauri::AppHandle) {
-    let w = Wallet::decrypt(wallet, password);
-    println!("{:#?}", w);
-    match tauri::WindowBuilder::new(
+fn open_wallet(
+    wallet: Wallet,
+    password: &str,
+    app: tauri::AppHandle,
+) -> tauri::Result<Vec<Wallet>> {
+    let wallet = Wallet::decrypt(wallet, password)?;
+    let mut open_wallets = OPEN_WALLETS.lock().unwrap();
+    open_wallets.push(wallet);
+
+    let _ = tauri::WindowBuilder::new(
         &app,
         "transaction_manager",
         tauri::WindowUrl::App("transaction_manager.html".into()),
     )
-    .build()
-    {
-        Ok(_) => {
-            let transaction_manager = app.get_window("transaction_manager").unwrap();
-            if let Ok(Some(monitor)) = transaction_manager.primary_monitor() {
-                let size =
-                    PhysicalSize::new(monitor.size().width - 420, monitor.size().height - 30);
-                transaction_manager
-                    .set_size(size)
-                    .expect("Failed to set window size");
-            }
-            let _ = transaction_manager.move_window(Position::TopLeft);
-        }
-        Err(_) => {}
-    };
+    .build();
+    let transaction_manager = app.get_window("transaction_manager").unwrap();
+    if let Ok(Some(monitor)) = transaction_manager.primary_monitor() {
+        let size = PhysicalSize::new(monitor.size().width - 420, monitor.size().height - 30);
+        transaction_manager
+            .set_size(size)
+            .expect("Failed to set window size");
+    }
+    let _ = transaction_manager.move_window(Position::TopLeft);
+    Ok((*open_wallets).clone())
 }
 
 #[tauri::command]
@@ -96,7 +97,7 @@ fn read_wallets() -> Vec<Wallet> {
         .collect()
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 struct Wallet {
     pub name: String,
     pub address: Address,
@@ -221,31 +222,26 @@ impl Wallet {
             key: encode(encrypted_key.clone()),
         };
 
-        println!("{:#?} {:#?}", wallet, password);
         wallet
     }
 
-    fn decrypt(mut wallet: Self, password: &str) -> Self {
+    fn decrypt(mut wallet: Self, password: &str) -> std::io::Result<Self> {
         let password = {
             let mut sha256 = sha2::Sha256::new();
             sha256.update(password.as_bytes());
             &hex::encode(sha256.finalize())[..16]
         };
 
-        println!("{:#?} {:#?}", wallet, password);
-
-        let key = decrypt(
+        let decrypted_key = decrypt(
             Cipher::aes_128_ecb(),
             password.as_bytes(),
             None,
-            wallet.key.as_bytes(),
-        )
-        .unwrap();
-
-        let key = String::from_utf8(key).unwrap();
+            &decode(wallet.key).unwrap(),
+        )?;
+        let key = String::from_utf8(decrypted_key).unwrap();
 
         wallet.key = key;
-        wallet
+        Ok(wallet)
     }
 
     fn output_wallet(wallet: Wallet) {
