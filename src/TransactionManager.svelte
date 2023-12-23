@@ -11,6 +11,7 @@
 
   let openWallets: Wallet[] = [];
   let walletWidth = "";
+  let chosenWallet = 0;
 
   onMount(async () => {
     openWallets = await invoke("read_opened_wallets");
@@ -28,7 +29,13 @@
 
 <div>
   {#each openWallets as wallet}
-    <p style="width: {walletWidth};">{wallet.address.slice(0, 5)}</p>
+    {#if openWallets[chosenWallet].address === wallet.address}
+      <p style="width: {walletWidth}; border-top: 1px solid transparent;">
+        {wallet.address.slice(0, 5)}
+      </p>
+    {:else}
+      <p style="width: {walletWidth};">{wallet.address.slice(0, 5)}</p>
+    {/if}
   {/each}
 </div>
 
