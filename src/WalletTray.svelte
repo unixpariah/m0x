@@ -127,3 +127,8 @@
   {/if}
 </main>
 
+<style>
+  .container {
+    margin: 8px 8px 8px 8px;
+  }
+</style>

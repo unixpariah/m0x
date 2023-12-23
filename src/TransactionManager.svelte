@@ -10,15 +10,41 @@
   }
 
   let openWallets: Wallet[] = [];
+  let walletWidth = "";
 
   onMount(async () => {
     openWallets = await invoke("read_opened_wallets");
+    walletWidth = `${
+      (window.innerWidth - 12 * openWallets.length) / openWallets.length
+    }px`;
     await listen("update_wallet_list", (event: { payload: Wallet[] }) => {
       openWallets = event.payload;
+      walletWidth = `${
+        (window.innerWidth - 12 * openWallets.length) / openWallets.length
+      }px`;
     });
   });
 </script>
 
-{#each openWallets as item}
-  <p>{item.address}</p>
-{/each}
+<div>
+  {#each openWallets as wallet}
+    <p style="width: {walletWidth};">{wallet.address.slice(0, 5)}</p>
+  {/each}
+</div>
+
+<style>
+  p {
+    color: white;
+    font-size: 0.6rem;
+    float: left;
+    border: 1px solid white;
+    padding: 5px;
+    margin: 0;
+  }
+
+  div {
+    position: absolute;
+    bottom: 0;
+  }
+</style>
+
