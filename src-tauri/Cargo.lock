@@ -2950,6 +2950,7 @@ version = "0.0.0"
 dependencies = [
  "ethers",
  "hex",
+ "lazy_static",
  "openssl",
  "rand 0.8.5",
  "serde",

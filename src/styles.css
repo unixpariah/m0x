@@ -2,7 +2,7 @@
   font-family: "Cascadia Code", Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
 }
 
-body {
+html {
   width: 100%;
   height: 100vh;
   background: linear-gradient(145.79deg, #1B1D1F 12.05%, black 66%);

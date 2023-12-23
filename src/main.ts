@@ -1,7 +1,7 @@
 import "./styles.css";
-import App from "./App.svelte";
+import WalletTray from "./WalletTray.svelte";
 
-const app = new App({
+const app = new WalletTray({
   target: document.getElementById("app"),
 });
 

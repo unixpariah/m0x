@@ -5,7 +5,8 @@ use ethers::{
     signers::{coins_bip39::English, LocalWallet},
 };
 use hex::encode;
-use openssl::symm::{encrypt, Cipher};
+use lazy_static::lazy_static;
+use openssl::symm::{decrypt, encrypt, Cipher};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use sha2::Digest;
@@ -13,6 +14,36 @@ use std::{fs, thread};
 use tauri::api::path::app_data_dir;
 use tauri::{Config, Manager, PhysicalSize};
 use tauri_plugin_positioner::{Position, WindowExt};
+
+lazy_static! {
+    static ref OPEN_WALLETS: Vec<Wallet> = Vec::new();
+}
+
+#[tauri::command]
+fn open_wallet(wallet: Wallet, password: &str, app: tauri::AppHandle) {
+    let w = Wallet::decrypt(wallet, password);
+    println!("{:#?}", w);
+    match tauri::WindowBuilder::new(
+        &app,
+        "transaction_manager",
+        tauri::WindowUrl::App("transaction_manager.html".into()),
+    )
+    .build()
+    {
+        Ok(_) => {
+            let transaction_manager = app.get_window("transaction_manager").unwrap();
+            if let Ok(Some(monitor)) = transaction_manager.primary_monitor() {
+                let size =
+                    PhysicalSize::new(monitor.size().width - 420, monitor.size().height - 30);
+                transaction_manager
+                    .set_size(size)
+                    .expect("Failed to set window size");
+            }
+            let _ = transaction_manager.move_window(Position::TopLeft);
+        }
+        Err(_) => {}
+    };
+}
 
 #[tauri::command]
 fn generate_wallet(key_type: &str, password: &str, length: Option<usize>, name: String) {
@@ -79,7 +110,7 @@ impl Wallet {
         let private_key = encode(private_key);
         let wallet: LocalWallet = private_key.parse().unwrap();
 
-        let name = if name.is_empty() {
+        let name = if name.trim() == "" {
             format!("Wallet {}", read_wallets().len() + 1)
         } else {
             name
@@ -164,16 +195,20 @@ impl Wallet {
         Self::output_wallet(encrypted_wallet);
     }
 
-    fn encrypt(wallet: Wallet, password: &str) -> Wallet {
+    fn encrypt(wallet: Self, password: &str) -> Self {
         let password = {
             let mut sha256 = sha2::Sha256::new();
             sha256.update(password.as_bytes());
             &hex::encode(sha256.finalize())[..16]
         };
 
-        let cipher = Cipher::aes_128_ecb();
-        let encrypted_key = encrypt(cipher, password.as_bytes(), None, wallet.key.as_bytes())
-            .expect("Failed to encrypt wallets");
+        let encrypted_key = encrypt(
+            Cipher::aes_128_ecb(),
+            password.as_bytes(),
+            None,
+            wallet.key.as_bytes(),
+        )
+        .expect("Failed to encrypt wallets");
 
         let name = if wallet.name.is_empty() {
             format!("Wallet {}", read_wallets().len() + 1)
@@ -183,9 +218,33 @@ impl Wallet {
         let wallet = Wallet {
             name,
             address: wallet.address,
-            key: encode(encrypted_key),
+            key: encode(encrypted_key.clone()),
         };
 
+        println!("{:#?} {:#?}", wallet, password);
+        wallet
+    }
+
+    fn decrypt(mut wallet: Self, password: &str) -> Self {
+        let password = {
+            let mut sha256 = sha2::Sha256::new();
+            sha256.update(password.as_bytes());
+            &hex::encode(sha256.finalize())[..16]
+        };
+
+        println!("{:#?} {:#?}", wallet, password);
+
+        let key = decrypt(
+            Cipher::aes_128_ecb(),
+            password.as_bytes(),
+            None,
+            wallet.key.as_bytes(),
+        )
+        .unwrap();
+
+        let key = String::from_utf8(key).unwrap();
+
+        wallet.key = key;
         wallet
     }
 
@@ -204,17 +263,14 @@ impl Wallet {
 fn main() {
     tauri::Builder::default()
         .setup(|app| {
-            let win = app.get_window("main").unwrap();
-            let _ = win.move_window(Position::RightCenter);
-
-            let main_window = app.get_window("main").unwrap();
-            if let Ok(Some(monitor)) = main_window.primary_monitor() {
-                let size = PhysicalSize::new(400, monitor.size().height - 55);
-                main_window
+            let wallet_tray = app.get_window("main").unwrap();
+            if let Ok(Some(monitor)) = wallet_tray.primary_monitor() {
+                let size = PhysicalSize::new(400, monitor.size().height - 30);
+                wallet_tray
                     .set_size(size)
                     .expect("Failed to set window size");
             }
-
+            let _ = wallet_tray.move_window(Position::TopRight);
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -222,6 +278,7 @@ fn main() {
             read_wallets,
             change_name,
             import_wallet,
+            open_wallet
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

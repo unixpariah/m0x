@@ -34,9 +34,11 @@
     },
     "windows": [
       {
+        "label": "main",
+        "title": "Wallet Tray",
         "alwaysOnTop": true,
         "resizable": false,
-        "title": "m0x"
+        "width": 410
       }
     ]
   }

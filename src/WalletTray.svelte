@@ -1,5 +1,6 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/tauri";
+
   import CreateWalletsComponent from "./WalletTray/CreateWallets.svelte";
   import WalletsComponent from "./WalletTray/Wallets.svelte";
   import PasswordInputComponent from "./WalletTray/PasswordInput.svelte";
@@ -18,7 +19,7 @@
   let isCreatingPassword = false;
   let selectedKeyType: string;
   let enteredPassword: string;
-  let enteredName: string;
+  let enteredName: string = "";
   let passwordLength = 12;
   let walletList: Wallet[] = [];
   let searchQuery = "";
@@ -125,3 +126,4 @@
     {/if}
   {/if}
 </main>
+
