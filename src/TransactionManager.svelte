@@ -37,6 +37,15 @@
         if (chosenWallet < openWallets.length - 1) {
           chosenWallet++;
         }
+        break;
+      case "d":
+        invoke("close_wallet", { index: chosenWallet });
+        if (chosenWallet >= openWallets.length - 1) {
+          chosenWallet = openWallets.length - 2;
+        }
+        break;
+      case "D":
+        invoke("close_wallet");
       default:
         break;
     }
@@ -56,6 +65,10 @@
     {/if}
   {/each}
 </div>
+
+{#if openWallets.length === 0}
+  <h2>no open wallets</h2>
+{/if}
 
 <style>
   p {
