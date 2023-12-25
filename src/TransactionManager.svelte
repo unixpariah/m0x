@@ -29,14 +29,18 @@
   const handleKeydown = (e: { key: string }) => {
     switch (e.key) {
       case "H":
-        if (chosenWallet > 0) {
-          chosenWallet--;
+        if (chosenWallet <= 0) {
+          chosenWallet = openWallets.length - 1;
+          return;
         }
+        chosenWallet--;
         break;
       case "L":
-        if (chosenWallet < openWallets.length - 1) {
-          chosenWallet++;
+        if (chosenWallet >= openWallets.length - 1) {
+          chosenWallet = 0;
+          return;
         }
+        chosenWallet++;
         break;
       case "d":
         invoke("close_wallet", { index: chosenWallet });
@@ -85,4 +89,3 @@
     bottom: 0;
   }
 </style>
-

@@ -1,3 +1,4 @@
+
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod wallet;
@@ -40,7 +41,7 @@ fn open_wallet(wallet: Wallet, password: &str, app: tauri::AppHandle) -> tauri::
     let _ = tauri::WindowBuilder::new(
         &app,
         "transaction_manager",
-        tauri::WindowUrl::App("transaction_manager.html".into()),
+        tauri::WindowUrl::App("transactionManager.html".into()),
     )
     .build();
     let transaction_manager = app.get_window("transaction_manager").unwrap();
@@ -98,6 +99,7 @@ fn change_name(address: &str, name: String) {
 fn read_wallets() -> Vec<Wallet> {
     let config = Config::default();
     let app_data_dir_path = app_data_dir(&config).unwrap().join("m0x/signers");
+    let _ = fs::create_dir_all(&app_data_dir_path);
     let wallets = fs::read_dir(&app_data_dir_path).unwrap();
     let mut handles = Vec::new();
     wallets.into_iter().for_each(|signer| {
