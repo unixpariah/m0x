@@ -1,4 +1,3 @@
-
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod wallet;
@@ -47,14 +46,11 @@ fn open_wallet(wallet: Wallet, password: &str, app: tauri::AppHandle) -> tauri::
     let transaction_manager = app.get_window("transaction_manager").unwrap();
     if let Ok(Some(monitor)) = transaction_manager.primary_monitor() {
         let size = PhysicalSize::new(monitor.size().width - 420, monitor.size().height - 30);
-        transaction_manager
-            .set_size(size)
-            .expect("Failed to set window size");
+        let _ = transaction_manager.set_size(size);
+        let _ = transaction_manager.set_title("Transaction Manager");
+        let _ = transaction_manager.move_window(Position::TopLeft);
+        let _ = transaction_manager.emit("update_wallet_list", &*open_wallets);
     }
-    let _ = transaction_manager.move_window(Position::TopLeft);
-    transaction_manager
-        .emit("update_wallet_list", &*open_wallets)
-        .unwrap();
     Ok(())
 }
 
@@ -77,7 +73,7 @@ fn generate_wallet(key_type: &str, password: &str, length: Option<usize>, name: 
 fn import_wallet(key_type: &str, password: &str, key: &str, name: String) {
     match key_type {
         "private_key" => Wallet::import_pk(key, password, name),
-        "importMnemonic" => Wallet::import_seed(key, password, name),
+        "import_mnemonic" => Wallet::import_seed(key, password, name),
         _ => unreachable!(),
     };
 }

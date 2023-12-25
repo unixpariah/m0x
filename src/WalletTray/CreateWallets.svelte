@@ -20,7 +20,7 @@
     text="Private key"
   />
   <ExportMethod
-    on:click={() => importNewWallet("importMnemonic")}
+    on:click={() => importNewWallet("import_mnemonic")}
     text="Seed phrase"
   />
   <h3>Create:</h3>
@@ -100,4 +100,3 @@
     }
   }
 </style>
-

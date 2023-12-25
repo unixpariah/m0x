@@ -11,25 +11,47 @@
   }
 
   let openWallets: Wallet[] = [];
-  let walletWidth = "";
+  let walletItemWidth = "";
+  let currentWallet: Wallet;
 
   onMount(async () => {
     openWallets = await invoke("read_opened_wallets");
-    walletWidth = `${
-      (window.innerWidth - 12 * openWallets.length) / openWallets.length
-    }px`;
+    updateWalletItemWidth();
+    currentWallet = openWallets[0];
+
     await listen("update_wallet_list", (event: { payload: Wallet[] }) => {
       openWallets = event.payload;
-      walletWidth = `${
-        (window.innerWidth - 12 * openWallets.length) / openWallets.length
-      }px`;
+      updateWalletItemWidth();
     });
   });
+
+  const calculateWalletItemWidth = () => {
+    return `${
+      (window.innerWidth - 12 * openWallets.length) / openWallets.length
+    }px`;
+  };
+
+  const updateWalletItemWidth = () => {
+    walletItemWidth = calculateWalletItemWidth();
+  };
+
+  const updateIndex = (event: { detail: number }) => {
+    currentWallet = openWallets[event.detail];
+  };
+
+  updateWalletItemWidth();
 </script>
 
-<Buffer {openWallets} {walletWidth} />
+<p>{currentWallet?.name}</p>
+<p>{currentWallet?.address}</p>
+<Buffer
+  on:selectedWalletIndex={updateIndex}
+  {openWallets}
+  {walletItemWidth}
+  {updateWalletItemWidth}
+/>
 
 {#if openWallets.length === 0}
-  <h2>no open wallets</h2>
+  <h2>No open wallets</h2>
 {/if}
 
