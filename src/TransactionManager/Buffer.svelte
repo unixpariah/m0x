@@ -4,9 +4,9 @@
 
   const dispatch = createEventDispatcher<{ selectedWalletIndex: number }>();
 
-  function selectWallet(index: number) {
+  const selectWallet = (index: number) => {
     dispatch("selectedWalletIndex", index);
-  }
+  };
 
   interface Wallet {
     name: string;
@@ -59,23 +59,44 @@
 
 <div>
   {#each openWallets as wallet, index}
-    <p
+    <button
+      id="buffer"
+      on:click={() => {
+        selectedWalletIndex = index;
+        dispatch("selectedWalletIndex", index);
+      }}
       style="width: {walletItemWidth}; {selectedWalletIndex === index &&
         'border-top: 1px solid transparent;'}"
     >
+      <button
+        on:click={async () => {
+          await invoke("close_wallet", { index });
+          selectedWalletIndex = selectedWalletIndex - 1;
+          selectWallet(selectedWalletIndex);
+        }}>X</button
+      >
       {wallet.address.slice(0, 5)}
-    </p>
+    </button>
   {/each}
 </div>
 
 <style>
-  p {
+  #buffer {
+    text-align: left;
     color: white;
     font-size: 0.6rem;
     float: left;
     border: 1px solid white;
     padding: 5px;
     margin: 0;
+  }
+
+  button {
+    cursor: pointer;
+    background-color: transparent;
+    color: white;
+    border-radius: 0;
+    border: 0;
   }
 
   div {

@@ -27,7 +27,7 @@
 
   const calculateWalletItemWidth = () => {
     return `${
-      (window.innerWidth - 12 * openWallets.length) / openWallets.length
+      (window.innerWidth - 0.1 * openWallets.length) / openWallets.length
     }px`;
   };
 
