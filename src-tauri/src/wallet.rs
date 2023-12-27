@@ -8,9 +8,15 @@ use openssl::symm::{decrypt, encrypt, Cipher};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use sha2::Digest;
-use std::fs;
+use std::{fs, future::Future, sync::Arc};
 use tauri::api::path::app_data_dir;
 use tauri::Config;
+
+abigen!(
+    Balance,
+    "./contracts/balance_scanner.json",
+    event_derives(serde::Deserialize, serde::Serialize)
+);
 
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct Wallet {
@@ -168,5 +174,27 @@ impl Wallet {
         app_data_dir_path.push("signer.json");
         let wallet = serde_json::to_string(&wallet).unwrap();
         fs::write(&app_data_dir_path, wallet).expect("Failed to create account");
+    }
+
+    pub async fn get_balance(wallet: Wallet) -> U256 {
+        let provider = Provider::<Http>::connect("https://rpc-goerli.flashbots.net/").await;
+        let balance_scanner_address = "0x9788C4E93f9002a7ad8e72633b11E8d1ecd51f9b"
+            .parse::<Address>()
+            .unwrap();
+
+        let balance_scanner = Balance::new(balance_scanner_address, Arc::new(provider.clone()));
+
+        let zero_address = vec!["0x0000000000000000000000000000000000000000"
+            .parse::<Address>()
+            .unwrap()];
+
+        match balance_scanner
+            .balances(vec![wallet.address], zero_address)
+            .call()
+            .await
+        {
+            Ok(balances) => balances[0],
+            Err(_) => U256::from(0),
+        }
     }
 }

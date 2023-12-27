@@ -14,6 +14,12 @@ lazy_static! {
 }
 
 #[tauri::command]
+async fn get_balance(wallet: Wallet) -> usize {
+    let balance = Wallet::get_balance(wallet).await;
+    format!("{:?}", balance).parse().unwrap()
+}
+
+#[tauri::command]
 fn close_wallet(index: Option<usize>, app: tauri::AppHandle) {
     let mut open_wallets = OPEN_WALLETS.lock().unwrap();
     match index {
@@ -132,7 +138,8 @@ fn main() {
             import_wallet,
             open_wallet,
             read_opened_wallets,
-            close_wallet
+            close_wallet,
+            get_balance,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -4,26 +4,53 @@
   import { onMount } from "svelte";
   import { invoke } from "@tauri-apps/api/tauri";
 
+  interface CachedBalances {
+    [key: string]: string;
+  }
+
   interface Wallet {
     name: string;
     address: string;
     key: string;
   }
 
+  const cachedBalances: CachedBalances = {};
+
   let openWallets: Wallet[] = [];
   let walletItemWidth = "";
   let currentWallet: Wallet;
+  let balance = "0";
 
   onMount(async () => {
     openWallets = await invoke("read_opened_wallets");
+    openWallets.forEach((wallet) => {
+      cachedBalances[wallet.address] = "0";
+    });
     updateWalletItemWidth();
     currentWallet = openWallets[0];
+    await fetchAndStoreBalance();
 
     await listen("update_wallet_list", (event: { payload: Wallet[] }) => {
       openWallets = event.payload;
       updateWalletItemWidth();
     });
   });
+
+  const fetchAndStoreBalance = async () => {
+    const rawBalance =
+      ((await invoke("get_balance", { wallet: currentWallet })) as number) /
+      10 ** 18;
+    const formattedBalance = rawBalance.toString().slice(0, -13);
+
+    if (rawBalance > 0) {
+      balance = formattedBalance;
+      cachedBalances[currentWallet.address] = formattedBalance;
+      return;
+    }
+
+    balance = "0";
+    cachedBalances[currentWallet.address] = "0";
+  };
 
   const calculateWalletItemWidth = () => {
     return `${
@@ -40,10 +67,19 @@
   };
 
   updateWalletItemWidth();
+
+  $: {
+    if (currentWallet) {
+      (async () => {
+        await fetchAndStoreBalance();
+      })();
+    }
+  }
 </script>
 
 <p>{currentWallet?.name}</p>
 <p>{currentWallet?.address}</p>
+<p>{balance} ETH</p>
 <Buffer
   on:selectedWalletIndex={updateIndex}
   {openWallets}
