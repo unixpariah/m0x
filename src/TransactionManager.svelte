@@ -23,35 +23,36 @@
 
   onMount(async () => {
     openWallets = await invoke("read_opened_wallets");
-    openWallets.forEach((wallet) => {
-      cachedBalances[wallet.address] = "0";
-    });
+    cachedBalances[openWallets[0]?.address] = "0";
     updateWalletItemWidth();
     currentWallet = openWallets[0];
-    await fetchAndStoreBalance();
+    await fetchAndStoreBalance(currentWallet);
 
     await listen("update_wallet_list", (event: { payload: Wallet[] }) => {
       openWallets = event.payload;
+      openWallets.forEach((wallet) => {
+        cachedBalances[wallet.address] = "0";
+      });
       updateWalletItemWidth();
     });
   });
 
-  const fetchAndStoreBalance = async () => {
-    balance = cachedBalances[currentWallet.address];
+  const fetchAndStoreBalance = async (wallet: Wallet) => {
+    balance = cachedBalances[wallet.address];
 
     const rawBalance =
-      ((await invoke("get_balance", { wallet: currentWallet })) as number) /
-      10 ** 18;
+      ((await invoke("get_balance", { wallet })) as number) / 10 ** 18;
     const formattedBalance = rawBalance.toString().slice(0, -13);
 
     if (rawBalance > 0) {
-      balance = formattedBalance;
-      cachedBalances[currentWallet.address] = formattedBalance;
+      cachedBalances[wallet.address] = formattedBalance;
+      if (currentWallet === wallet) {
+        balance = formattedBalance;
+      }
       return;
     }
 
-    balance = "0";
-    cachedBalances[currentWallet.address] = "0";
+    cachedBalances[wallet.address] = "0";
   };
 
   const calculateWalletItemWidth = () => {
@@ -73,7 +74,7 @@
   $: {
     if (currentWallet) {
       (async () => {
-        await fetchAndStoreBalance();
+        await fetchAndStoreBalance(currentWallet);
       })();
     }
   }
