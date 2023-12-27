@@ -37,6 +37,8 @@
   });
 
   const fetchAndStoreBalance = async () => {
+    balance = cachedBalances[currentWallet.address];
+
     const rawBalance =
       ((await invoke("get_balance", { wallet: currentWallet })) as number) /
       10 ** 18;
