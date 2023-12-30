@@ -8,9 +8,11 @@ use openssl::symm::{decrypt, encrypt, Cipher};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use sha2::Digest;
-use std::{fs, future::Future, sync::Arc};
+use std::{fs, sync::Arc};
 use tauri::api::path::app_data_dir;
 use tauri::Config;
+
+pub const PROVIDER: &str = "https://rpc-goerli.flashbots.net/";
 
 abigen!(
     Balance,
@@ -177,7 +179,7 @@ impl Wallet {
     }
 
     pub async fn get_balance(wallet: Wallet) -> U256 {
-        let provider = Provider::<Http>::connect("https://rpc-goerli.flashbots.net/").await;
+        let provider = Provider::<Http>::connect(PROVIDER).await;
         let balance_scanner_address = "0x9788C4E93f9002a7ad8e72633b11E8d1ecd51f9b"
             .parse::<Address>()
             .unwrap();

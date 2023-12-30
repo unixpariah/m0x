@@ -1,5 +1,6 @@
 <script lang="ts">
   import Buffer from "./TransactionManager/Buffer.svelte";
+  import ChainData from "./TransactionManager/ChainData.svelte";
   import { listen } from "@tauri-apps/api/event";
   import { onMount } from "svelte";
   import { invoke } from "@tauri-apps/api/tauri";
@@ -83,6 +84,7 @@
 <p>{currentWallet?.name}</p>
 <p>{currentWallet?.address}</p>
 <p>{balance} ETH</p>
+<ChainData />
 <Buffer
   on:selectedWalletIndex={updateIndex}
   {openWallets}
@@ -94,3 +96,8 @@
   <h2>No open wallets</h2>
 {/if}
 
+<style>
+  p {
+    color: white;
+  }
+</style>

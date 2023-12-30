@@ -1,16 +1,39 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-mod wallet;
+mod eth;
 
+use eth::{Wallet, PROVIDER};
+use ethers::prelude::*;
 use lazy_static::lazy_static;
 use std::{fs, sync::Mutex, thread};
 use tauri::api::path::app_data_dir;
 use tauri::{Config, Manager, PhysicalSize};
 use tauri_plugin_positioner::{Position, WindowExt};
-use wallet::Wallet;
 
 lazy_static! {
     static ref OPEN_WALLETS: Mutex<Vec<Wallet>> = Mutex::new(Vec::new());
+}
+
+#[tauri::command]
+async fn get_data() -> (String, String, String) {
+    let provider = Provider::<Http>::connect(PROVIDER).await;
+    (
+        provider
+            .get_block_number()
+            .await
+            .unwrap_or(U64::from(0))
+            .to_string(),
+        provider
+            .get_gas_price()
+            .await
+            .unwrap_or(U256::from(0))
+            .to_string(),
+        provider
+            .get_chainid()
+            .await
+            .unwrap_or(U256::from(1))
+            .to_string(),
+    )
 }
 
 #[tauri::command]
@@ -140,6 +163,7 @@ fn main() {
             read_opened_wallets,
             close_wallet,
             get_balance,
+            get_data,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
