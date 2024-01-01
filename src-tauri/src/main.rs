@@ -19,9 +19,9 @@ async fn get_data() -> (String, String, String) {
     let provider = Provider::<Http>::connect(PROVIDER).await;
     (
         provider
-            .get_block_number()
+            .get_chainid()
             .await
-            .unwrap_or(U64::from(0))
+            .unwrap_or(U256::from(1))
             .to_string(),
         provider
             .get_gas_price()
@@ -29,9 +29,9 @@ async fn get_data() -> (String, String, String) {
             .unwrap_or(U256::from(0))
             .to_string(),
         provider
-            .get_chainid()
+            .get_block_number()
             .await
-            .unwrap_or(U256::from(1))
+            .unwrap_or(U64::from(0))
             .to_string(),
     )
 }
