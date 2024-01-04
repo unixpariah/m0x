@@ -21,8 +21,11 @@
   let selectedWalletIndex = 0;
   selectWallet(selectedWalletIndex);
 
-  const handleKeydown = (e: { key: string }) => {
+  const handleKeydown = (e: { key: string; target: any }) => {
     updateWalletItemWidth();
+    if ((e.target as HTMLElement).closest(".ignore-keys")) {
+      return;
+    }
 
     switch (e.key) {
       case "H":
@@ -45,6 +48,8 @@
           selectedWalletIndex >= openWallets.length - 1
             ? openWallets.length - 2
             : selectedWalletIndex;
+
+        selectWallet(selectedWalletIndex);
 
         if (openWallets.length === 1) {
           invoke("close_window");
