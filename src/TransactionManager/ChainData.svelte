@@ -1,20 +1,22 @@
-<script>
+<script lang="ts">
   import { invoke } from "@tauri-apps/api/tauri";
   import { onMount } from "svelte";
-  let data = ["0", "0"];
+  import { ethers } from "ethers";
+
+  const provider = new ethers.JsonRpcProvider("https://eth.llamarpc.com");
+  let data: string[] = [];
 
   onMount(async () => {
     data = await invoke("get_data");
-    setInterval(async () => {
+    provider.on("block", async () => {
       data = await invoke("get_data");
-    }, 10000);
+    });
   });
 </script>
 
 <div>
-  <p>{data[0]}</p>
-  <p>{data[1]}</p>
-  <p>{data[2]}</p>
+  <p>{data[0] || 0}</p>
+  <p>{data[1] || 0}</p>
 </div>
 
 <style>
@@ -34,3 +36,4 @@
     padding-right: 5px;
   }
 </style>
+

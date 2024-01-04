@@ -1,4 +1,4 @@
-use crate::read_wallets;
+use crate::{read_wallets, PROVIDERS};
 use ethers::{
     prelude::*,
     signers::{coins_bip39::English, LocalWallet},
@@ -11,8 +11,6 @@ use sha2::Digest;
 use std::{fs, sync::Arc};
 use tauri::api::path::app_data_dir;
 use tauri::Config;
-
-pub const PROVIDER: &str = "https://rpc-goerli.flashbots.net/";
 
 abigen!(
     Balance,
@@ -179,7 +177,8 @@ impl Wallet {
     }
 
     pub async fn get_balance(wallet: Wallet) -> U256 {
-        let provider = Provider::<Http>::connect(PROVIDER).await;
+        let url = PROVIDERS.lock().unwrap().to_owned();
+        let provider = Provider::<Http>::connect(&url[0]).await;
         let balance_scanner_address = "0x9788C4E93f9002a7ad8e72633b11E8d1ecd51f9b"
             .parse::<Address>()
             .unwrap();

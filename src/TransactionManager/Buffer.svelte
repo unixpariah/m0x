@@ -45,6 +45,10 @@
           selectedWalletIndex >= openWallets.length - 1
             ? openWallets.length - 2
             : selectedWalletIndex;
+
+        if (openWallets.length === 1) {
+          invoke("close_window");
+        }
         break;
       case "D":
         invoke("close_wallet");
@@ -66,11 +70,14 @@
         dispatch("selectedWalletIndex", index);
       }}
       style="width: {walletItemWidth}; {selectedWalletIndex === index &&
-        'border-top: 1px solid transparent;'}"
+        'border-top: 1px solid transparent; background-color: transparent;'}"
     >
       <button
         on:click={async () => {
           await invoke("close_wallet", { index });
+          if (openWallets.length === 0) {
+            invoke("close_window");
+          }
           selectedWalletIndex = selectedWalletIndex - 1;
           selectWallet(selectedWalletIndex);
         }}>X</button
@@ -93,7 +100,7 @@
 
   button {
     cursor: pointer;
-    background-color: transparent;
+    background-color: grey;
     color: white;
     border-radius: 0;
     border: 0;
