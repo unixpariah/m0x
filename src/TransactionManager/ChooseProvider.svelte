@@ -1,6 +1,7 @@
 <script lang="ts">
   import { invoke } from "@tauri-apps/api/tauri";
   import { onMount } from "svelte";
+  import { ethers } from "ethers";
 
   let providers: string[] = [];
   let isExpanded = false;
@@ -10,6 +11,7 @@
 
   onMount(async () => {
     providers = await invoke("get_providers");
+    expandedHeight = 52 + (providers.length - 1) * 40;
   });
 
   const addProvider = (event: Event) => {
@@ -26,7 +28,13 @@
   <div id="line"></div>
   {#each providers as provider, i}
     {#if i > 0}
-      <button id="provider">{provider}</button>
+      <button
+        on:click={async () => {
+          [providers[0], providers[i]] = [providers[i], providers[0]];
+          await invoke("update_provider_list", { updatedProviders: providers });
+        }}
+        id="provider">{provider}</button
+      >
     {/if}
   {/each}
   <button id="new-provider" on:click={() => (enterProvider = true)}
@@ -37,8 +45,17 @@
 {#if enterProvider}
   <input class="ignore-keys" type="text" on:input={addProvider} />
   <button
-    on:click={() => {
+    on:click={async () => {
+      newProvider = newProvider.replace(/\s/g, "");
       if (providers.includes(newProvider)) {
+        return;
+      }
+
+      const provider = new ethers.JsonRpcProvider(newProvider);
+
+      try {
+        await provider.getNetwork();
+      } catch (e) {
         return;
       }
 
@@ -47,6 +64,8 @@
       newProvider = "";
       enterProvider = false;
       expandedHeight = 52 + (providers.length - 1) * 40;
+
+      await invoke("update_provider_list", { updatedProviders: providers });
     }}
   ></button>
 {/if}

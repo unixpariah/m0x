@@ -4,12 +4,9 @@ use tauri::api::path::app_data_dir;
 use tauri::Config;
 
 #[tauri::command]
-pub fn update_provider_list(provider: String) {
+pub fn update_provider_list(updated_providers: Vec<String>) {
     let mut providers = PROVIDERS.lock().unwrap();
-    if providers.contains(&provider) {
-        return;
-    }
-    providers.push(provider);
+    *providers = updated_providers;
     let config = Config::default();
     let providers_path = app_data_dir(&config).unwrap().join("m0x/providers.json");
     let providers = serde_json::to_string(&*providers).unwrap();
