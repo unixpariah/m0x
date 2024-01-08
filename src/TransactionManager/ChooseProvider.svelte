@@ -20,27 +20,31 @@
   };
 </script>
 
-<button id="provider" on:click={() => (isExpanded = !isExpanded)}
-  >{providers[0]}</button
->
-
-<div style="height: {isExpanded ? expandedHeight : 0}px">
-  <div id="line"></div>
-  {#each providers as provider, i}
-    {#if i > 0}
-      <button
-        on:click={async () => {
-          [providers[0], providers[i]] = [providers[i], providers[0]];
-          await invoke("update_provider_list", { updatedProviders: providers });
-        }}
-        id="provider">{provider}</button
-      >
-    {/if}
-  {/each}
-  <button id="new-provider" on:click={() => (enterProvider = true)}
-    >Add new provider</button
+<main>
+  <button id="provider" on:click={() => (isExpanded = !isExpanded)}
+    >{providers[0]}</button
   >
-</div>
+
+  <div style="height: {isExpanded ? expandedHeight : 0}px">
+    <div id="line"></div>
+    {#each providers as provider, i}
+      {#if i > 0}
+        <button
+          on:click={async () => {
+            [providers[0], providers[i]] = [providers[i], providers[0]];
+            await invoke("update_provider_list", {
+              updatedProviders: providers,
+            });
+          }}
+          id="provider">{provider}</button
+        >
+      {/if}
+    {/each}
+    <button id="new-provider" on:click={() => (enterProvider = true)}
+      >Add new provider</button
+    >
+  </div>
+</main>
 
 {#if enterProvider}
   <input class="ignore-keys" type="text" on:input={addProvider} />
@@ -71,6 +75,11 @@
 {/if}
 
 <style>
+  main {
+    float: right;
+    margin-right: 500px;
+  }
+
   #line {
     height: 0;
     border: 1px solid black;
@@ -101,4 +110,3 @@
     height: 40px;
   }
 </style>
-

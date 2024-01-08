@@ -82,21 +82,27 @@
   }
 </script>
 
-<p>{currentWallet?.name}</p>
-<p>{currentWallet?.address}</p>
-<p>{balance || 0} ETH</p>
+<div>
+  <p>{currentWallet?.name}</p>
+  <p>{currentWallet?.address}</p>
+  <p>{balance || 0} ETH</p>
+</div>
 <ChainData />
+<ChooseProvider />
 <Buffer
   on:selectedWalletIndex={updateIndex}
   {openWallets}
   {walletItemWidth}
   {updateWalletItemWidth}
 />
-<ChooseProvider />
 
 <style>
   p {
     color: white;
+  }
+
+  div {
+    float: left;
   }
 </style>
 

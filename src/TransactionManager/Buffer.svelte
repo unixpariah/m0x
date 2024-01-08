@@ -83,7 +83,11 @@
           if (openWallets.length === 0) {
             invoke("close_window");
           }
-          selectedWalletIndex = selectedWalletIndex - 1;
+
+          if (selectedWalletIndex > 0) {
+            selectedWalletIndex = selectedWalletIndex - 1;
+          }
+
           selectWallet(selectedWalletIndex);
         }}>X</button
       >

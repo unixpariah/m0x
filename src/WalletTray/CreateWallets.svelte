@@ -1,6 +1,4 @@
 <script lang="ts">
-  import ExportMethod from "./CreateWallets/ExportMethod.svelte";
-
   export let trayHeight: number;
   export let isTrayExpanded: boolean;
   export let toggleTrayHeight: () => void;
@@ -15,26 +13,38 @@
 
   <div id="line"></div>
   <h3>Import:</h3>
-  <ExportMethod
-    on:click={() => importNewWallet("private_key")}
-    text="Private key"
-  />
-  <ExportMethod
-    on:click={() => importNewWallet("import_mnemonic")}
-    text="Seed phrase"
-  />
+
+  <button class="method-button" on:click={() => importNewWallet("private_key")}
+    >Private key</button
+  >
+  <button
+    class="method-button"
+    on:click={() => importNewWallet("import_mnemonic")}>Seed phrase</button
+  >
   <h3>Create:</h3>
-  <ExportMethod
-    on:click={() => createNewWallet("private_key")}
-    text="Private key"
-  />
-  <ExportMethod
-    on:click={() => createNewWallet("mnemonic")}
-    text="Seed phrase"
-  />
+  <button class="method-button" on:click={() => createNewWallet("private_key")}
+    >Private key</button
+  >
+  <button class="method-button" on:click={() => createNewWallet("mnemonic")}
+    >Seed phrase</button
+  >
 </div>
 
 <style>
+  .method-button {
+    cursor: pointer;
+    margin-left: 10px;
+    margin-top: 10px;
+    border: 0;
+    background-color: black;
+    color: white;
+    width: 360px;
+    height: 60px;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 20px;
+  }
+
   #expanding-div {
     background-color: #1d1d1f;
     transition: height 0.5s;
