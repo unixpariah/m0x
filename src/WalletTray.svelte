@@ -4,7 +4,6 @@
   import CreateWalletsComponent from "./WalletTray/CreateWallets.svelte";
   import WalletsComponent from "./WalletTray/Wallets.svelte";
   import PasswordInputComponent from "./WalletTray/PasswordInput.svelte";
-  import SearchBarComponent from "./WalletTray/SearchBar.svelte";
 
   interface Wallet {
     name: string;
@@ -103,7 +102,13 @@
     {toggleTrayHeight}
     {importNewWallet}
   />
-  <SearchBarComponent {searchQuery} {setSearchQuery} />
+  <input
+    id="search-bar"
+    type="text"
+    bind:value={searchQuery}
+    on:input={setSearchQuery}
+    placeholder="Search..."
+  />
   <WalletsComponent {walletList} />
   {#if isCreatingWallet}
     <PasswordInputComponent
@@ -131,4 +136,12 @@
   .container {
     margin: 8px 8px 8px 8px;
   }
+
+  #search-bar {
+    width: 376px;
+    height: 20px;
+    margin-top: 10px;
+    margin-left: 0;
+  }
 </style>
+

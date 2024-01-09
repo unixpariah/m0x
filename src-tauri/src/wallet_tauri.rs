@@ -17,7 +17,7 @@ pub fn close_wallet(index: Option<usize>, app: tauri::AppHandle) {
         }
         None => {
             open_wallets.clear();
-            close_window(app);
+            let _ = close_window(app);
             return;
         }
     }

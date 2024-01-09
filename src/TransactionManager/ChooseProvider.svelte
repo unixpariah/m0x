@@ -3,11 +3,17 @@
   import { onMount } from "svelte";
   import { ethers } from "ethers";
 
-  let providers: string[] = [];
+  interface Provider {
+    name: string;
+    url: string;
+  }
+
+  let providers: Provider[] = [];
   let isExpanded = false;
   let enterProvider = false;
   let expandedHeight = 52;
   let newProvider: string;
+  let providerName: string;
 
   onMount(async () => {
     providers = await invoke("get_providers");
@@ -18,11 +24,16 @@
     const target = event.target as HTMLInputElement;
     newProvider = target.value;
   };
+
+  const setProviderName = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    providerName = target.value;
+  };
 </script>
 
 <main>
   <button id="provider" on:click={() => (isExpanded = !isExpanded)}
-    >{providers[0]}</button
+    >{providers[0]?.name}</button
   >
 
   <div style="height: {isExpanded ? expandedHeight : 0}px">
@@ -36,7 +47,7 @@
               updatedProviders: providers,
             });
           }}
-          id="provider">{provider}</button
+          id="provider">{provider.name}</button
         >
       {/if}
     {/each}
@@ -47,11 +58,13 @@
 </main>
 
 {#if enterProvider}
+  <input class="ignore-keys" type="text" on:input={setProviderName} />
   <input class="ignore-keys" type="text" on:input={addProvider} />
   <button
     on:click={async () => {
       newProvider = newProvider.replace(/\s/g, "");
-      if (providers.includes(newProvider)) {
+      const providerObject = { name: providerName, url: newProvider };
+      if (providers.some((provider) => provider.name === providerName)) {
         return;
       }
 
@@ -63,7 +76,7 @@
         return;
       }
 
-      providers.push(newProvider);
+      providers.push(providerObject);
       providers = providers;
       newProvider = "";
       enterProvider = false;
@@ -110,3 +123,4 @@
     height: 40px;
   }
 </style>
+

@@ -8,7 +8,7 @@
 
 <div style={`height: ${trayHeight}px;`} id="expanding-div">
   <button on:click={toggleTrayHeight} class:clicked={isTrayExpanded}>
-    {!isTrayExpanded ? "Create new wallets" : "Hide menu"}
+    {!isTrayExpanded ? "New wallet" : "Hide menu"}
   </button>
 
   <div id="line"></div>
@@ -110,3 +110,4 @@
     }
   }
 </style>
+

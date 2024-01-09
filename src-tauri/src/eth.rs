@@ -18,7 +18,7 @@ abigen!(
     event_derives(serde::Deserialize, serde::Serialize)
 );
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct Wallet {
     pub name: String,
     address: Address,
@@ -140,7 +140,7 @@ impl Wallet {
         let wallet = Wallet {
             name,
             address: wallet.address,
-            key: encode(encrypted_key.clone()),
+            key: encode(encrypted_key),
         };
 
         wallet
@@ -178,12 +178,12 @@ impl Wallet {
 
     pub async fn get_balance(wallet: Wallet) -> U256 {
         let url = PROVIDERS.lock().unwrap().to_owned();
-        let provider = Provider::<Http>::connect(&url[0]).await;
+        let provider = Provider::<Http>::connect(&url[0].url).await;
         let balance_scanner_address = "0x9788C4E93f9002a7ad8e72633b11E8d1ecd51f9b"
             .parse::<Address>()
             .unwrap();
 
-        let balance_scanner = Balance::new(balance_scanner_address, Arc::new(provider.clone()));
+        let balance_scanner = Balance::new(balance_scanner_address, Arc::new(&provider));
 
         let zero_address = vec!["0x0000000000000000000000000000000000000000"
             .parse::<Address>()

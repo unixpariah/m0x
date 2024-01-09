@@ -17,13 +17,13 @@ use wallet_tauri::{
 
 lazy_static! {
     static ref OPEN_WALLETS: Mutex<Vec<Wallet>> = Mutex::new(Vec::new());
-    pub static ref PROVIDERS: Mutex<Vec<String>> = Mutex::new(Vec::new());
+    pub static ref PROVIDERS: Mutex<Vec<provider_tauri::Provider>> = Mutex::new(Vec::new());
 }
 
 #[tauri::command]
 async fn get_data() -> (String, String) {
     let url = PROVIDERS.lock().unwrap().to_owned();
-    let provider = Provider::<Http>::connect(&url[0]).await;
+    let provider = Provider::<Http>::connect(&url[0].url).await;
     let gas_price = provider
         .get_gas_price()
         .await
@@ -38,9 +38,11 @@ async fn get_data() -> (String, String) {
 }
 
 #[tauri::command]
-fn close_window(app: tauri::AppHandle) {
-    let transaction_manager = app.get_window("transaction_manager").unwrap();
-    let _ = transaction_manager.close();
+fn close_window(app: tauri::AppHandle) -> tauri::Result<()> {
+    if let Some(transaction_manager) = app.get_window("transaction_manager") {
+        transaction_manager.close()?;
+    }
+    Ok(())
 }
 
 /*

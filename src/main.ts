@@ -1,8 +1,13 @@
 import "./styles.css";
 import WalletTray from "./WalletTray.svelte";
+import TransactionManager from "./TransactionManager.svelte";
 
-const app = new WalletTray({
- target: document.getElementById("app"),
+const walletTrayApp = new WalletTray({
+ target: document.getElementById("walletTray"),
 });
 
-export default app;
+const transactionManagerApp = new TransactionManager({
+ target: document.getElementById("transactionManager"),
+});
+
+export { walletTray, transactionManager };

@@ -1,8 +1,7 @@
 import "./styles.css";
 import TransactionManager from "./TransactionManager.svelte";
-
 const app = new TransactionManager({
-  target: document.getElementById("app"),
+  target: document.getElementById("transactionManager"),
 });
 
-export default app;
+export default transactionManager;
